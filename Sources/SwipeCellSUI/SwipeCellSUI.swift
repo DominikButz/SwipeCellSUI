@@ -2,39 +2,53 @@ import Foundation
 import SwiftUI
 
 
-
-
 public struct SwipeCellModifier: ViewModifier {
     var cellWidth: CGFloat = UIScreen.main.bounds.width
-    var leftSideGroup: [SwipeCellActionItem] = []
-    var rightSideGroup: [SwipeCellActionItem] = []
- 
-    let openTriggerValue: CGFloat = 40
-    let swipeOutTriggerRatio: CGFloat = 0.75
-    let revealMenuWidth: CGFloat = 160
-    let addWidthMargin: CGFloat = 5
-    
+    var leadingSideGroup: [SwipeCellActionItem] = []
+    var trailingSideGroup: [SwipeCellActionItem] = []
+    var settings: SwipeCellSettings = SwipeCellSettings()
+
     @State private var offsetX: CGFloat = 0
     
     let generator = UINotificationFeedbackGenerator()
-    
+    @State private var hapticFeedbackOccurred: Bool = false
     @State private var openSideLock: SwipeGroupSide?
-    
+
     public func body(content: Content) -> some View {
-        ZStack {
-            
-            if self.leftSideGroup.isEmpty == false {
-                self.swipeToRevealArea(swipeItemGroup: self.leftSideGroup, side: .leading)
+
+            ZStack {
+                
+                if self.leadingSideGroup.isEmpty == false && self.offsetX != 0 {
+                    self.swipeToRevealArea(swipeItemGroup: self.leadingSideGroup, side: .leading)
+                }
+                
+                if self.trailingSideGroup.isEmpty == false && self.offsetX != 0 {
+                    self.swipeToRevealArea(swipeItemGroup: self.trailingSideGroup, side: .trailing)
+                }
+                
+                content
+                    .offset(x: self.offsetX)
+                    .gesture(DragGesture().onChanged(self.dragOnChanged(value:)).onEnded(dragOnEnded(value:)))
             }
-            
-            if self.rightSideGroup.isEmpty == false {
-                self.swipeToRevealArea(swipeItemGroup: self.rightSideGroup, side: .trailing)
-            }
-            
-            content
-                .offset(x: self.offsetX)
-                .gesture(DragGesture().onChanged(self.dragOnChanged(value:)).onEnded(dragOnEnded(value:)))
+      
+    }
+    
+
+    
+    internal func menuWidth(side: SwipeGroupSide)->CGFloat {
+        switch side {
+            case .leading:
+                return self.leadingSideGroup.map({$0.buttonWidth}).reduce(0, +)
+          
+            case .trailing:
+                return self.trailingSideGroup.map({$0.buttonWidth}).reduce(0, +)
+        
         }
+    }
+    
+    
+    internal func nonDraggableCondition(horizontalTranslation: CGFloat)->Bool {
+        return self.offsetX == 0 && (self.leadingSideGroup.isEmpty && horizontalTranslation > 0 || self.trailingSideGroup.isEmpty && horizontalTranslation < 0)
     }
     
     
@@ -45,92 +59,200 @@ public struct SwipeCellModifier: ViewModifier {
         }
         
         if self.openSideLock != nil {
-            
-            let factor: CGFloat = self.openSideLock == .leading ? 1 : -1
-            self.offsetX = revealMenuWidth * factor + horizontalTranslation
-            if self.openSideLock == .leading && horizontalTranslation < -10 || self.openSideLock == .trailing && horizontalTranslation > 10 {
-                self.setOffsetX(value: 0)
-                self.openSideLock = nil
-            }
+            // if one side is open, we need to add the menu width!
+              let menuWidth = self.openSideLock == .leading ? self.menuWidth(side: .leading) : self.menuWidth(side: .trailing)
+              self.offsetX = menuWidth * openSideLock!.sideFactor + horizontalTranslation
+            self.triggerHapticFeedbackIfNeeded(horizontalTranslation: horizontalTranslation)
             return
         }
-
         
-        self.offsetX = horizontalTranslation
+        self.triggerHapticFeedbackIfNeeded(horizontalTranslation: horizontalTranslation)
+        
+
+        self.offsetX =  horizontalTranslation
     }
     
+//    internal func closeOpenSideMenuIfNeeded(horizontalTranslation: CGFloat) {
+//        if self.openSideLock != nil {
+////
+////            let factor: CGFloat = self.openSideLock == .leading ? 1 : -1
+//              let menuWidth = self.openSideLock == .leading ? self.menuWidth(side: .leading) : self.menuWidth(side: .trailing)
+//              self.offsetX = menuWidth * openSideLock!.sideFactor + horizontalTranslation
+//
+//           // self.offsetX = self.menuWidth(side: <#T##SwipeGroupSide#>) + horizontalTranslation
+//
+//
+////            if self.openSideLock == .leading && horizontalTranslation < -10 || self.openSideLock == .trailing && horizontalTranslation > 10 {
+////                self.setOffsetX(value: 0)
+////                self.openSideLock = nil
+////            }
+//            return
+//        }
+//    }
     
-    internal func nonDraggableCondition(horizontalTranslation: CGFloat)->Bool {
-        return self.offsetX == 0 && (self.leftSideGroup.isEmpty && horizontalTranslation > 0 || self.rightSideGroup.isEmpty && horizontalTranslation < 0)
+    internal func triggerHapticFeedbackIfNeeded(horizontalTranslation: CGFloat) {
+        let side: SwipeGroupSide = horizontalTranslation > 0 ? .leading : .trailing
+        let group = side == .leading ? self.leadingSideGroup : self.trailingSideGroup
+        let triggerValue  = self.cellWidth * self.settings.swipeOutTriggerRatio
+        let swipeOutActionCondition = side == .leading ?  self.offsetX > triggerValue  : self.offsetX < -triggerValue
+        if let item = self.swipeOutItemWithHapticFeedback(group: group), self.hapticFeedbackOccurred == false, swipeOutActionCondition  == true {
+            self.generator.notificationOccurred(item.swipeOutHapticFeedbackType!)
+            self.hapticFeedbackOccurred = true
+        }
+    }
+    
+    internal func swipeOutItemWithHapticFeedback(group: [SwipeCellActionItem])->SwipeCellActionItem? {
+        if let item = group.filter({$0.swipeOutAction == true}).first {
+            if item.swipeOutHapticFeedbackType != nil {
+                return item
+            }
+        }
+        return nil
     }
     
     internal func dragOnEnded(value: DragGesture.Value) {
-//
-        if self.leftSideGroup.isEmpty == false{
-            if self.offsetX > 0 {
-                if self.offsetX.magnitude < openTriggerValue {
-                    self.setOffsetX(value: 0)
-                    self.openSideLock = nil
-                }
+        
+       let swipeOutTriggerValue =  self.cellWidth * self.settings.swipeOutTriggerRatio
 
-                else if let leftItem =  self.leftSideGroup.filter({$0.swipeOutAction == true}).first, self.offsetX.magnitude > self.cellWidth * swipeOutTriggerRatio {
-                    if leftItem.swipeOutIsDestructive {
-                        self.setOffsetX(value: cellWidth + 10)
-                    } else {
-                        self.setOffsetX(value: 0)
-                    }
-                    self.openSideLock = nil
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        leftItem.actionCallback()
-                    }
-                }
-
-                else {
-                    self.setOffsetX(value: revealMenuWidth)
-                    self.openSideLock = .leading
-                }
-            } else if self.rightSideGroup.isEmpty && self.offsetX < 0 {
-                self.setOffsetX(value: 0)
-                self.openSideLock = nil
-            }
-
-
+        if self.offsetX == 0 {
+            self.openSideLock = nil
         }
+        
+        else if self.offsetX > 0 {
 
-        if self.rightSideGroup.isEmpty == false {
-            if self.offsetX < 0 {
-                if self.offsetX.magnitude < openTriggerValue {
-                    self.setOffsetX(value: 0)
-                    self.openSideLock = nil
-                }
-
-                else if let rightItem = self.rightSideGroup.filter({$0.swipeOutAction == true}).first,  self.offsetX.magnitude > self.cellWidth * swipeOutTriggerRatio {
-                    if rightItem.swipeOutIsDestructive {
-                        self.setOffsetX(value: -cellWidth - 10)
-                    } else {
-                        self.setOffsetX(value: 0)
-                    }
-                    self.openSideLock = nil
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        rightItem.actionCallback()
-                    }
+            if self.leadingSideGroup.isEmpty == false {
                 
-                    
+                if self.offsetX < settings.openTriggerValue || (self.openSideLock == .leading && self.offsetX < self.menuWidth(side: .leading) * 0.8)  {
+                    self.setOffsetX(value: 0)
                 }
 
+                else if let leftItem =  self.leadingSideGroup.filter({$0.swipeOutAction == true}).first, self.offsetX.magnitude > swipeOutTriggerValue {
+                    self.swipeOutAction(item: leftItem, sideFactor: 1)
+                }
                 else {
-                    self.setOffsetX(value: -revealMenuWidth)
-                    self.openSideLock = .trailing
+                    self.lockSideMenu(side: .leading)
                 }
-            } else if self.leftSideGroup.isEmpty && self.offsetX > 0 {
+                
+            } else {
+                // leading group emtpy
                 self.setOffsetX(value: 0)
-                self.openSideLock = nil
+  
             }
-
-
+            
         }
+        
+        else if self.offsetX < 0 {
+            
+            if self.trailingSideGroup.isEmpty == false {
+                if self.offsetX.magnitude < settings.openTriggerValue || (self.openSideLock == .trailing && self.offsetX > -self.menuWidth(side: .trailing) * 0.8) {
+                    self.setOffsetX(value: 0)
+                }
+                else if let rightItem = self.trailingSideGroup.filter({$0.swipeOutAction == true}).first,  self.offsetX.magnitude > swipeOutTriggerValue {
+                    self.swipeOutAction(item: rightItem, sideFactor: -1)
+                }
+                else {
+                    self.lockSideMenu(side: .trailing)
+                }
 
+            } else {
+                // trailing group emtpy
+                self.setOffsetX(value: 0)
+              
+            }
+            
+            
+        }
+        
     }
+    
+    internal func swipeOutAction(item: SwipeCellActionItem, sideFactor: CGFloat) {
+        if item.swipeOutIsDestructive {
+           let swipeOutWidth = cellWidth + 10
+            self.setOffsetX(value: swipeOutWidth * sideFactor)
+            self.openSideLock = nil
+        } else {
+            self.setOffsetX(value: 0) // open side lock set in function!
+        }
+      
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            item.actionCallback()
+        }
+    }
+    
+    internal func lockSideMenu(side: SwipeGroupSide) {
+        
+        self.setOffsetX(value:  side.sideFactor * self.menuWidth(side: side))
+        self.openSideLock = side
+        self.hapticFeedbackOccurred = false
+    }
+    
+//    internal func dragOnEnded(value: DragGesture.Value) {
+////
+//        if self.leadingSideGroup.isEmpty == false{
+//            if self.offsetX > 0 {
+//                if self.offsetX.magnitude < settings.openTriggerValue {
+//                    self.setOffsetX(value: 0)
+//                    self.openSideLock = nil
+//                }
+//
+//                else if let leftItem =  self.leadingSideGroup.filter({$0.swipeOutAction == true}).first, self.offsetX.magnitude > self.cellWidth * self.settings.swipeOutTriggerRatio {
+//                    if leftItem.swipeOutIsDestructive {
+//                        self.setOffsetX(value: cellWidth + 10)
+//                    } else {
+//                        self.setOffsetX(value: 0)
+//                    }
+//                    self.openSideLock = nil
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+//                        leftItem.actionCallback()
+//                    }
+//                }
+//
+//                else {
+//                    self.setOffsetX(value: self.menuWidth(side: .leading))
+//                    self.openSideLock = .leading
+//                }
+//            } else if self.trailingSideGroup.isEmpty && self.offsetX < 0 {
+//                self.setOffsetX(value: 0)
+//                self.openSideLock = nil
+//            }
+//
+//
+//        }
+//
+//        if self.trailingSideGroup.isEmpty == false {
+//            if self.offsetX < 0 {
+//                if self.offsetX.magnitude < settings.openTriggerValue && self.openSideLock == nil {
+//                    self.setOffsetX(value: 0)
+//                    self.openSideLock = nil
+//                }
+//
+//                else if let rightItem = self.trailingSideGroup.filter({$0.swipeOutAction == true}).first,  self.offsetX.magnitude > self.cellWidth * settings.swipeOutTriggerRatio {
+//                    if rightItem.swipeOutIsDestructive {
+//                        self.setOffsetX(value: -cellWidth - 10)
+//                    } else {
+//                        self.setOffsetX(value: 0)
+//                    }
+//                    self.openSideLock = nil
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+//                        rightItem.actionCallback()
+//                    }
+//
+//
+//                }
+//
+//                else {
+//                    self.setOffsetX(value: -self.menuWidth(side: .trailing))
+//                    self.openSideLock = .trailing
+//                }
+//            } else if self.leadingSideGroup.isEmpty && self.offsetX > 0 {
+//                self.setOffsetX(value: 0)
+//                self.openSideLock = nil
+//            }
+//
+//
+//        }
+//
+//    }
     
 
     
@@ -142,28 +264,27 @@ public struct SwipeCellModifier: ViewModifier {
                 }
                 ZStack {
 //                    swipeItem.backgroundColor.frame(width: self.revealAreaWidth(side: side))
-                    HStack(spacing:0) {
-                    ForEach(swipeItemGroup) { item in
-                    
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                self.offsetX = 0
+                        HStack(spacing:0) {
+                          ForEach(swipeItemGroup) { item in
+                        
+                            Button {
+                                self.setOffsetX(value: 0)
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                    item.actionCallback()
+                                }
+                            } label: {
+                                self.itemContentView(item: item, group: swipeItemGroup, side: side)
                             }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                item.actionCallback()
-                            }
-                        } label: {
-                            self.itemContentView(item: item, group: swipeItemGroup, side: side)
-                        }
 
+                        }
                     }
-                }
                 }.opacity(self.swipeRevealAreaOpacity(side: side))
     
                     if side == .leading {
                         Spacer()
                     }
-            }.edgesIgnoringSafeArea(.horizontal)
+            }
+            //.edgesIgnoringSafeArea(.horizontal)
 
         
     }
@@ -175,15 +296,6 @@ public struct SwipeCellModifier: ViewModifier {
                 HStack {
                     Spacer()
                     item.buttonView().scaleEffect(self.warnSwipeOutCondition(side: side, hasSwipeOut: item.swipeOutAction) ? item.swipeOutButtonViewScaleFactor : 1).padding(10).animation(.default)
-                        
-//                                    .onTapGesture {
-//                                        withAnimation(.easeInOut(duration: 0.3)) {
-//                                            self.offsetX = 0
-//                                        }
-//                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-//                                            item.actionCallback()
-//                                        }
-//                                    }
                     Spacer()
                 }
         }.frame(width: self.itemButtonWidth(item: item, itemGroup: group, side: side))
@@ -193,30 +305,44 @@ public struct SwipeCellModifier: ViewModifier {
         withAnimation {
             self.offsetX = value
         }
+        if self.offsetX == 0 {
+            self.openSideLock = nil
+            self.hapticFeedbackOccurred = false
+        }
     }
 
     
     internal func itemButtonWidth(item: SwipeCellActionItem, itemGroup: [SwipeCellActionItem],  side: SwipeGroupSide)->CGFloat {
-        let defaultWidth = (self.offsetX.magnitude + addWidthMargin) / CGFloat(itemGroup.count)
-        let triggerValue  = self.cellWidth * swipeOutTriggerRatio
+      //  let defaultWidth = (self.offsetX.magnitude + addWidthMargin) / CGFloat(itemGroup.count)
+        let dynamicButtonWidth = self.dynamicButtonWidth(item: item, itemCount:itemGroup.count, side: side)
+        let triggerValue  = self.cellWidth * settings.swipeOutTriggerRatio
         let swipeOutActionCondition = side == .leading ?  self.offsetX > triggerValue  : self.offsetX < -triggerValue
         
         if item.swipeOutAction && swipeOutActionCondition {
-            return self.offsetX.magnitude + addWidthMargin
+
+            return self.offsetX.magnitude + settings.addWidthMargin
         } else if swipeOutActionCondition && item.swipeOutAction == false && itemGroup.contains(where: {$0.swipeOutAction == true}) {
+      
             return 0
         } else {
-            return defaultWidth
+       
+            return dynamicButtonWidth
         }
         
-       // return self.revealAreaWidth(side: side) / CGFloat(swipeItemGroup.count)
+    }
+    
+
+    
+    internal func dynamicButtonWidth(item: SwipeCellActionItem, itemCount: Int, side: SwipeGroupSide)->CGFloat {
+        let defaultMenuWidth = self.menuWidth(side: side)
+        return (self.offsetX.magnitude + settings.addWidthMargin ) * (item.buttonWidth  / defaultMenuWidth)
     }
     
     internal func warnSwipeOutCondition(side: SwipeGroupSide, hasSwipeOut: Bool)->Bool {
         if hasSwipeOut == false {
             return false
         }
-        let triggerValue  = self.cellWidth * swipeOutTriggerRatio
+        let triggerValue  = self.cellWidth * settings.swipeOutTriggerRatio
         return (side == .trailing && self.offsetX < -triggerValue) || (side == .leading && self.offsetX > triggerValue)
 
     }
@@ -224,9 +350,10 @@ public struct SwipeCellModifier: ViewModifier {
     internal func swipeRevealAreaOpacity(side: SwipeGroupSide)->Double {
         switch side {
         case .leading:
-            return self.offsetX > 0 ? 1 : 0
+        
+            return self.offsetX > 5 ? 1 : 0
         case .trailing:
-           return self.offsetX < 0 ? 1 : 0
+           return self.offsetX < -5 ? 1 : 0
         }
     }
 }
@@ -234,6 +361,6 @@ public struct SwipeCellModifier: ViewModifier {
 public extension View {
     
     func swipeCell(cellWidth: CGFloat, leftSideGroup: [SwipeCellActionItem], rightSideGroup: [SwipeCellActionItem])->some View {
-        self.modifier(SwipeCellModifier(cellWidth: cellWidth, leftSideGroup: leftSideGroup, rightSideGroup: rightSideGroup))
+        self.modifier(SwipeCellModifier(cellWidth: cellWidth, leadingSideGroup: leftSideGroup, trailingSideGroup: rightSideGroup))
     }
 }
