@@ -286,8 +286,8 @@ public struct SwipeCellModifier: ViewModifier {
 
 public extension View {
     
-    func swipeCell(cellWidth: CGFloat = UIScreen.main.bounds.width, leadingSideGroup: [SwipeCellActionItem], trailingSideGroup: [SwipeCellActionItem])->some View {
-        self.modifier(SwipeCellModifier(cellWidth: cellWidth, leadingSideGroup: leadingSideGroup, trailingSideGroup: trailingSideGroup))
+    func swipeCell(cellWidth: CGFloat = UIScreen.main.bounds.width, leadingSideGroup: [SwipeCellActionItem], trailingSideGroup: [SwipeCellActionItem], settings: SwipeCellSettings = SwipeCellSettings())->some View {
+        self.modifier(SwipeCellModifier(cellWidth: cellWidth, leadingSideGroup: leadingSideGroup, trailingSideGroup: trailingSideGroup, settings: settings))
     }
 }
 
