@@ -24,7 +24,7 @@ Simply add the swift package through the Swift Package mMnager (see below - Inst
 ## Installation
 
 
-Installation through the Swift Package Manager (SPM) is recommended. C
+Installation through the Swift Package Manager (SPM) is recommended. 
 
 SPM:
 Select your project (not the target) and then select the Swift Packages tab. Click + and type SwipeCellSUI should find the package on github. Otherwise copy and paste the whole URL of this repo.
@@ -97,19 +97,7 @@ struct RowView: View {
             }.animation(.default).castToAnyView()
 
     }
-    
-    func pinImageName()->String {
-        
 
-            return self.isPinned ? "pin.slash": "pin"
-        
-    }
-    
-    func pinText()->String {
-           return self.isPinned ? "Unpin": "Pin"
-
-    }
-    
     func rightGroup()->[SwipeCellActionItem] {
 
         let items =  [
