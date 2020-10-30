@@ -68,9 +68,13 @@ public struct SwipeCellActionItem: Identifiable {
 /// Swipe Cell Settings
 public struct SwipeCellSettings {
     /// initializer
-    public init(){}
+    public init(openTriggerValue: CGFloat = 60, swipeOutTriggerRatio: CGFloat =  0.7, addWidthMargin: CGFloat = 5 ){
+        self.openTriggerValue = openTriggerValue
+        self.swipeOutTriggerRatio = swipeOutTriggerRatio
+        self.addWidthMargin = addWidthMargin
+    }
     /// minimum horizontal translation value necessary to open the side menu
-    public var openTriggerValue: CGFloat = 60
+    public var openTriggerValue: CGFloat
     /// the ratio of the total cell width that triggers a swipe out action (provided one action has swipe out activated)
     public var swipeOutTriggerRatio: CGFloat = 0.7
     /// An additional value to add to the open menu width. This is useful if the cell has rounded corners.
