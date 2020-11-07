@@ -112,8 +112,12 @@ public struct SwipeCellModifier: ViewModifier {
         
         self.triggerHapticFeedbackIfNeeded(horizontalTranslation: horizontalTranslation)
         
-
-        self.offsetX =  horizontalTranslation
+        if horizontalTranslation > 8 || horizontalTranslation < -8 { // makes sure the swipe cell doesn't open too easily
+            self.offsetX =  horizontalTranslation
+        } else {
+            self.offsetX = 0
+        }
+    
     }
     
     

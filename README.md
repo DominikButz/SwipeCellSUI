@@ -148,6 +148,9 @@ struct RowView: View {
 
 ## Change log
 
+#### [Version 1.0.3](https://github.com/DominikButz/SwipeCellSUI/releases/tag/1.0.3)
+Swipe Cell menu opening less easily now. 
+
 #### [Version 1.0.2](https://github.com/DominikButz/SwipeCellSUI/releases/tag/1.0.2)
 Settings properties can now be changed as expected.
 
