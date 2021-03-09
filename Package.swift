@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "SwipeCellSUI",
     platforms: [
-        .iOS(SupportedPlatform.IOSVersion.v13)
+        .iOS(SupportedPlatform.IOSVersion.v14)
     ],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.

@@ -14,8 +14,9 @@ Simply add the swift package through the Swift Package mMnager (see below - Inst
 
 * Add multiple leading and/or trailing menu buttons 
 * Fully customize each button view
-* Add swipe out to one button on each side
+* Add swipe out behavior to one button on each side
 * Add a haptic feedback to indicate that the swipe out will be triggered 
+* from version 2.0: auto closes an open cell if the user swipes another cell. 
 
 
 	Check out the example for details. 
@@ -58,12 +59,12 @@ struct RowView: View {
     var item: String
     @State private var isPinned: Bool = false
     var deletionCallback: (String)->()
- 
+    @Binding var currentDragCellID: UUID?
     
     var body: some View {
         Text(item).frame(width: availableWidth, height:100)
         .background(RoundedRectangle(cornerRadius: 5).foregroundColor(.green))
-        .swipeCell(cellWidth: availableWidth, leadingSideGroup: leftGroup(), trailingSideGroup: rightGroup())  
+        .swipeCell(cellWidth: availableWidth, leadingSideGroup: leftGroup(), trailingSideGroup: rightGroup(), currentDragCellID:currentDragCellID)  
         
         // you can customize settings by adding the settings parameter at the end
      
@@ -147,6 +148,11 @@ struct RowView: View {
 ```
 
 ## Change log
+
+#### [Version 2.0.0](https://github.com/DominikButz/SwipeCellSUI/releases/tag/2.0.0)
+Breaking changes: 
+- now only supporting iOS 14 or newer. 
+- you need to set a currentDragCellID optional UUID binding now (either originating from your view model as published var or in the parent view itself as State variable). This property will ascertain that if there are several swipe cells (as is typically the case in a list) and the user swipes a cell, another cell whose side menu is currently open, will automatically close (similar behavior as in the Apple iOS Notes app)
 
 #### [Version 1.0.3](https://github.com/DominikButz/SwipeCellSUI/releases/tag/1.0.3)
 Swipe Cell menu opening less easily now. 

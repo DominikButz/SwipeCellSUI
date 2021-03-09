@@ -6,8 +6,11 @@ public struct SwipeCellModifier: ViewModifier {
     var cellWidth: CGFloat = UIScreen.main.bounds.width
     var leadingSideGroup: [SwipeCellActionItem] = []
     var trailingSideGroup: [SwipeCellActionItem] = []
+    @Binding var currentDragCellID: UUID?
     var settings: SwipeCellSettings = SwipeCellSettings()
-
+    
+    let id: UUID = UUID()
+    
     @State private var offsetX: CGFloat = 0
     
     let generator = UINotificationFeedbackGenerator()
@@ -31,6 +34,16 @@ public struct SwipeCellModifier: ViewModifier {
                     .gesture(DragGesture().onChanged(self.dragOnChanged(value:)).onEnded(dragOnEnded(value:)))
             }.frame(width: cellWidth)
             .edgesIgnoringSafeArea(.horizontal)
+            .clipped()
+            .onChange(of: self.currentDragCellID) { (_) in
+                if let currentDragCellID = self.currentDragCellID, currentDragCellID != self.id && self.openSideLock != nil {
+                    // if this cell has an open side area and is not the cell being dragged, close the cell
+                    self.setOffsetX(value: 0)
+                    // reset the drag cell id to nil
+                    self.currentDragCellID = nil
+                }
+            }
+
     }
     
     
@@ -113,6 +126,7 @@ public struct SwipeCellModifier: ViewModifier {
         self.triggerHapticFeedbackIfNeeded(horizontalTranslation: horizontalTranslation)
         
         if horizontalTranslation > 8 || horizontalTranslation < -8 { // makes sure the swipe cell doesn't open too easily
+            self.currentDragCellID = self.id
             self.offsetX =  horizontalTranslation
         } else {
             self.offsetX = 0
@@ -288,8 +302,16 @@ public struct SwipeCellModifier: ViewModifier {
 
 public extension View {
     
-    func swipeCell(cellWidth: CGFloat = UIScreen.main.bounds.width, leadingSideGroup: [SwipeCellActionItem], trailingSideGroup: [SwipeCellActionItem], settings: SwipeCellSettings = SwipeCellSettings())->some View {
-        self.modifier(SwipeCellModifier(cellWidth: cellWidth, leadingSideGroup: leadingSideGroup, trailingSideGroup: trailingSideGroup, settings: settings))
+    /// swipe cell modifier
+    /// - Parameters:
+    ///   - cellWidth: the width of the content view - typically a cell or row in a list under which the swipe to reveal menu should appear.
+    ///   - leadingSideGroup: the button group on the leading side that shall appear when the user swipes the cell to the right
+    ///   - trailingSideGroup: the button group on the trailing side that shall appear when the user swipes the cell to the left
+    ///   - currentDragCellID: a Binding of an optional UUID that should be set either in the view model of the parent view in which the cells appear or as a State variable into the parent view itself.
+    ///   - settings: settings. can be omitted in which case the settings struct default values apply.
+    /// - Returns: the modified view of the view that can be swiped.
+    func swipeCell(cellWidth: CGFloat = UIScreen.main.bounds.width, leadingSideGroup: [SwipeCellActionItem], trailingSideGroup: [SwipeCellActionItem], currentDragCellID: Binding<UUID?>, settings: SwipeCellSettings = SwipeCellSettings())->some View {
+        self.modifier(SwipeCellModifier(cellWidth: cellWidth, leadingSideGroup: leadingSideGroup, trailingSideGroup: trailingSideGroup, currentDragCellID: currentDragCellID, settings: settings))
     }
 }
 
@@ -298,3 +320,4 @@ public extension View {
       return AnyView(self)
     }
 }
+
