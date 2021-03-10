@@ -16,7 +16,8 @@ Simply add the swift package through the Swift Package mMnager (see below - Inst
 * Fully customize each button view
 * Add swipe out behavior to one button on each side
 * Add a haptic feedback to indicate that the swipe out will be triggered 
-* from version 2.0: auto closes an open cell if the user swipes another cell. 
+* from version 2.0: auto closes an open cell if the user swipes another cell 
+* from version 2.1: make an open cell close on tap on another cell (example below)
 
 
 	Check out the example for details. 
@@ -59,12 +60,17 @@ struct RowView: View {
     var item: String
     @State private var isPinned: Bool = false
     var deletionCallback: (String)->()
-    @Binding var currentDragCellID: UUID?
+    @Binding var currentUserInteractionCellID: String?
     
     var body: some View {
         Text(item).frame(width: availableWidth, height:100)
         .background(RoundedRectangle(cornerRadius: 5).foregroundColor(.green))
-        .swipeCell(cellWidth: availableWidth, leadingSideGroup: leftGroup(), trailingSideGroup: rightGroup(), currentDragCellID:currentDragCellID)  
+        .swipeCell(id: self.item, cellWidth: availableWidth, leadingSideGroup: leftGroup(), trailingSideGroup: rightGroup(), currentDragCellID:currentDragCellID)  
+        .onTapGesture {
+            // this will make another cell close, in case its side panel is open:  
+            self.currentUserInteractionCellID = item
+            // implement other functionality associated to tapping the row if required.
+        }
         
         // you can customize settings by adding the settings parameter at the end
      
@@ -148,6 +154,10 @@ struct RowView: View {
 ```
 
 ## Change log
+
+#### [Version 2.1.0](https://github.com/DominikButz/SwipeCellSUI/releases/tag/2.1.0)
+- changed parameter name currentDragCellID to currentUserInteractionCellID and its type to Binding<String?>
+- set the currentUserInteractionCellID binding to the current id of your row or cell (e.g. onTap) if you want another open cell to close on tapping. For this to work, it is required to override the id parameter of the swipe cell modifier!
 
 #### [Version 2.0.0](https://github.com/DominikButz/SwipeCellSUI/releases/tag/2.0.0)
 Breaking changes: 

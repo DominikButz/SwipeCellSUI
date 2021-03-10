@@ -3,13 +3,12 @@ import SwiftUI
 
 
 public struct SwipeCellModifier: ViewModifier {
+    var id: String
     var cellWidth: CGFloat = UIScreen.main.bounds.width
     var leadingSideGroup: [SwipeCellActionItem] = []
     var trailingSideGroup: [SwipeCellActionItem] = []
-    @Binding var currentDragCellID: UUID?
+    @Binding var currentUserInteractionCellID: String?
     var settings: SwipeCellSettings = SwipeCellSettings()
-    
-    let id: UUID = UUID()
     
     @State private var offsetX: CGFloat = 0
     
@@ -32,15 +31,16 @@ public struct SwipeCellModifier: ViewModifier {
                 content
                     .offset(x: self.offsetX)
                     .gesture(DragGesture().onChanged(self.dragOnChanged(value:)).onEnded(dragOnEnded(value:)))
+                    
             }.frame(width: cellWidth)
             .edgesIgnoringSafeArea(.horizontal)
             .clipped()
-            .onChange(of: self.currentDragCellID) { (_) in
-                if let currentDragCellID = self.currentDragCellID, currentDragCellID != self.id && self.openSideLock != nil {
+            .onChange(of: self.currentUserInteractionCellID) { (_) in
+                if let currentDragCellID = self.currentUserInteractionCellID, currentDragCellID != self.id && self.openSideLock != nil {
                     // if this cell has an open side area and is not the cell being dragged, close the cell
                     self.setOffsetX(value: 0)
                     // reset the drag cell id to nil
-                    self.currentDragCellID = nil
+                    self.currentUserInteractionCellID = nil
                 }
             }
 
@@ -126,7 +126,7 @@ public struct SwipeCellModifier: ViewModifier {
         self.triggerHapticFeedbackIfNeeded(horizontalTranslation: horizontalTranslation)
         
         if horizontalTranslation > 8 || horizontalTranslation < -8 { // makes sure the swipe cell doesn't open too easily
-            self.currentDragCellID = self.id
+            self.currentUserInteractionCellID = self.id
             self.offsetX =  horizontalTranslation
         } else {
             self.offsetX = 0
@@ -307,11 +307,11 @@ public extension View {
     ///   - cellWidth: the width of the content view - typically a cell or row in a list under which the swipe to reveal menu should appear.
     ///   - leadingSideGroup: the button group on the leading side that shall appear when the user swipes the cell to the right
     ///   - trailingSideGroup: the button group on the trailing side that shall appear when the user swipes the cell to the left
-    ///   - currentDragCellID: a Binding of an optional UUID that should be set either in the view model of the parent view in which the cells appear or as a State variable into the parent view itself.
+    ///   - currentDragCellID: a Binding of an optional UUID that should be set either in the view model of the parent view in which the cells appear or as a State variable into the parent view itself. Don't assign it a value!
     ///   - settings: settings. can be omitted in which case the settings struct default values apply.
     /// - Returns: the modified view of the view that can be swiped.
-    func swipeCell(cellWidth: CGFloat = UIScreen.main.bounds.width, leadingSideGroup: [SwipeCellActionItem], trailingSideGroup: [SwipeCellActionItem], currentDragCellID: Binding<UUID?>, settings: SwipeCellSettings = SwipeCellSettings())->some View {
-        self.modifier(SwipeCellModifier(cellWidth: cellWidth, leadingSideGroup: leadingSideGroup, trailingSideGroup: trailingSideGroup, currentDragCellID: currentDragCellID, settings: settings))
+    func swipeCell(id:String = UUID().uuidString, cellWidth: CGFloat = UIScreen.main.bounds.width, leadingSideGroup: [SwipeCellActionItem], trailingSideGroup: [SwipeCellActionItem], currentUserInteractionCellID: Binding<String?>, settings: SwipeCellSettings = SwipeCellSettings())->some View {
+        self.modifier(SwipeCellModifier(id: id, cellWidth: cellWidth, leadingSideGroup: leadingSideGroup, trailingSideGroup: trailingSideGroup, currentUserInteractionCellID: currentUserInteractionCellID, settings: settings))
     }
 }
 
