@@ -304,10 +304,11 @@ public extension View {
     
     /// swipe cell modifier
     /// - Parameters:
+    ///   - id: the string id of this cell. The default value is a uuid string. If you want to set the currentUserInteractionCellID yourself, e.g. for tap to close functionality, you need to override this id value with your own cell id.
     ///   - cellWidth: the width of the content view - typically a cell or row in a list under which the swipe to reveal menu should appear.
     ///   - leadingSideGroup: the button group on the leading side that shall appear when the user swipes the cell to the right
     ///   - trailingSideGroup: the button group on the trailing side that shall appear when the user swipes the cell to the left
-    ///   - currentDragCellID: a Binding of an optional UUID that should be set either in the view model of the parent view in which the cells appear or as a State variable into the parent view itself. Don't assign it a value!
+    ///   - currentUserInteractionCellID: a Binding of an optional UUID that should be set either in the view model of the parent view in which the cells appear or as a State variable into the parent view itself. Don't assign it a value!
     ///   - settings: settings. can be omitted in which case the settings struct default values apply.
     /// - Returns: the modified view of the view that can be swiped.
     func swipeCell(id:String = UUID().uuidString, cellWidth: CGFloat = UIScreen.main.bounds.width, leadingSideGroup: [SwipeCellActionItem], trailingSideGroup: [SwipeCellActionItem], currentUserInteractionCellID: Binding<String?>, settings: SwipeCellSettings = SwipeCellSettings())->some View {

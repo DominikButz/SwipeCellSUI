@@ -155,6 +155,9 @@ struct RowView: View {
 
 ## Change log
 
+#### [Version 2.1.1](https://github.com/DominikButz/SwipeCellSUI/releases/tag/2.1.1)
+minor change: updated documentation.
+
 #### [Version 2.1.0](https://github.com/DominikButz/SwipeCellSUI/releases/tag/2.1.0)
 - changed parameter name currentDragCellID to currentUserInteractionCellID and its type to Binding<String?>
 - set the currentUserInteractionCellID binding to the current id of your row or cell (e.g. onTap) if you want another open cell to close on tapping. For this to work, it is required to override the id parameter of the swipe cell modifier!
