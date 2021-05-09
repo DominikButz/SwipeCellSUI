@@ -1,7 +1,7 @@
 # Swipe Cell SwiftUI
 
 
-Swipe Cell SwiftUI is a simple swipe-to-reveal menu view written in Swift. It supports iOS / iPadOs 13 or later. The purpose is to replace the default SwiftUI List .onDelete(perform: ...) modifier since its functionality is limited to deletion only and only works on List rows. Moreover, rows in an iOS 14 LazyVStack do not support swipe to reveal out of the box.
+Swipe Cell SwiftUI is a simple swipe-to-reveal menu view written in Swift. It supports iOS / iPadOs 14 or later. The purpose is to replace the default SwiftUI List .onDelete(perform: ...) modifier since its functionality is limited to deletion only and only works on List rows. Moreover, rows in an iOS 14 LazyVStack do not support swipe to reveal out of the box.
  Swipe Cell SwiftUI allows adding multiple menu buttons on the left and right side and also features a swipe out functionality (e.g. swipe to delete).
  
 
@@ -65,7 +65,7 @@ struct RowView: View {
     var body: some View {
         Text(item).frame(width: availableWidth, height:100)
         .background(RoundedRectangle(cornerRadius: 5).foregroundColor(.green))
-        .swipeCell(id: self.item, cellWidth: availableWidth, leadingSideGroup: leftGroup(), trailingSideGroup: rightGroup(), currentDragCellID:currentDragCellID)  
+        .swipeCell(id: self.item, cellWidth: availableWidth, leadingSideGroup: leftGroup(), trailingSideGroup: rightGroup(), currentUserInteractionCellID: $currentUserInteractionCellID)  
         .onTapGesture {
             // this will make another cell close, in case its side panel is open:  
             self.currentUserInteractionCellID = item
