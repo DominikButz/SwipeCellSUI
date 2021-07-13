@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  SwipeCellSUI_Model.swift
 //  
 //
 //  Created by Dominik Butz on 19/10/2020.
@@ -47,7 +47,7 @@ public struct SwipeCellActionItem: Identifiable {
      - Parameter backgroundColor: The background colour of the the menu button.
      - Parameter swipeOutAction: A Boolean that determines if a swipe out action is activated or not. Default is false.
     - Parameter swipeOutHapticFeedbackType: If a swipeOutAction is activated, a haptic feedback will occur after the swipe out threshold is passed. Default is nil.
-    - Parameter swipeOutIsDestructive: A Boolean that termines if the swipe out is destructive. If true,
+    - Parameter swipeOutIsDestructive: A Boolean that determines if the swipe out is destructive. If true, the content cell view will be "move out of sight" once the swipe out is triggered.
     */
     public init(id: String = UUID().uuidString, buttonView: @escaping ()->AnyView, swipeOutButtonView: (()->AnyView)? = nil, buttonWidth: CGFloat = 75, backgroundColor: Color, swipeOutAction: Bool = false, swipeOutHapticFeedbackType: UINotificationFeedbackGenerator.FeedbackType? = nil, swipeOutIsDestructive: Bool = true, actionCallback: @escaping ()->() ){
         self.id = id

@@ -40,6 +40,9 @@ Make sure to import SwipeCellSUI in every file where you use SwipeCellSUI.
 ```Swift
     import SwipeCellSUI
 ```
+## Known issues
+Before version 2.1.2, the swipe cell modifier seems to block List scrolling. This was fixed in 2.1.2. However, tapping the revealed buttons still does not seem to work properly with List views. The touch event works only for one button even if another button was tapped. 
+
 
 ## Usage
 
@@ -154,6 +157,9 @@ struct RowView: View {
 ```
 
 ## Change log
+
+#### [Version 2.1.2](https://github.com/DominikButz/SwipeCellSUI/releases/tag/2.1.2)
+Fixed scrolling issue for List views. Caution: Tapping the revealed menu buttons still doesn't work properly if you attach the swipe cell modifier to the rows of a List (better use ScrollView + LazyVStack). 
 
 #### [Version 2.1.1](https://github.com/DominikButz/SwipeCellSUI/releases/tag/2.1.1)
 minor change: updated documentation.
