@@ -65,7 +65,7 @@ public struct SwipeCellModifier: ViewModifier {
                                 }
                             } label: {
                                 self.buttonContentView(item: item, group: swipeItemGroup, side: side)
-                            }
+                            }.buttonStyle(BorderlessButtonStyle())
 
                         }
                     }
