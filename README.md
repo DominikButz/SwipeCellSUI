@@ -157,7 +157,9 @@ struct RowView: View {
 ```
 
 ## Change log
-
+#### [Version 2.1.3](https://github.com/DominikButz/SwipeCellSUI/releases/tag/2.1.3)
+mihapp's fix for usage with List - buttons are triggered separately now. 
+ 
 #### [Version 2.1.2](https://github.com/DominikButz/SwipeCellSUI/releases/tag/2.1.2)
 Fixed scrolling issue for List views. Caution: Tapping the revealed menu buttons still doesn't work properly if you attach the swipe cell modifier to the rows of a List (better use ScrollView + LazyVStack). 
 
