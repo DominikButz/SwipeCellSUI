@@ -32,7 +32,7 @@ public struct SwipeCellModifier: ViewModifier {
                     .offset(x: self.offsetX)
                     .gesture(DragGesture(minimumDistance: 30, coordinateSpace: .local).onChanged(self.dragOnChanged(value:)).onEnded(dragOnEnded(value:)))
                     
-            }.frame(width: cellWidth)
+            }
             .edgesIgnoringSafeArea(.horizontal)
             .clipped()
             .onChange(of: self.currentUserInteractionCellID) { (_) in
