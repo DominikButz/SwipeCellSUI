@@ -157,6 +157,11 @@ struct RowView: View {
 ```
 
 ## Change log
+
+#### [Version 2.1.4](https://github.com/DominikButz/SwipeCellSUI/releases/tag/2.1.4)
+- removed frame(width:cellWidth) to avoid setting an explicit total width of the content view
+- This should solve the problem of cut-off a leading view inside the content view when SwipeCellSUI is used for rows of a List view instead of a Scroll View. It might still be necessary to set the List View modifier: .listStyle(.plain) to solve this bug. 
+
 #### [Version 2.1.3](https://github.com/DominikButz/SwipeCellSUI/releases/tag/2.1.3)
 mihapp's fix for usage with List - buttons are triggered separately now. 
  

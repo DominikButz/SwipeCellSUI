@@ -20,11 +20,11 @@ public struct SwipeCellModifier: ViewModifier {
 
             ZStack {
                 
-                if self.leadingSideGroup.isEmpty == false && self.offsetX != 0 {
+                if self.leadingSideGroup.isEmpty == false && self.offsetX > 0 {
                     self.swipeToRevealArea(swipeItemGroup: self.leadingSideGroup, side: .leading)
                 }
                 
-                if self.trailingSideGroup.isEmpty == false && self.offsetX != 0 {
+                if self.trailingSideGroup.isEmpty == false && self.offsetX < 0 {
                     self.swipeToRevealArea(swipeItemGroup: self.trailingSideGroup, side: .trailing)
                 }
                 
@@ -32,7 +32,7 @@ public struct SwipeCellModifier: ViewModifier {
                     .offset(x: self.offsetX)
                     .gesture(DragGesture(minimumDistance: 30, coordinateSpace: .local).onChanged(self.dragOnChanged(value:)).onEnded(dragOnEnded(value:)))
                     
-            }.frame(width: cellWidth)
+            }
             .edgesIgnoringSafeArea(.horizontal)
             .clipped()
             .onChange(of: self.currentUserInteractionCellID) { (_) in
@@ -275,7 +275,7 @@ public struct SwipeCellModifier: ViewModifier {
 
     
     internal func dynamicButtonWidth(item: SwipeCellActionItem, itemCount: Int, side: SwipeGroupSide)->CGFloat {
-        let menuWidth = self.menuWidth(side: side)
+        let menuWidth = self.menuWidth(side: side) - settings.addWidthMargin
         return (self.offsetX.magnitude + settings.addWidthMargin ) * (item.buttonWidth  / menuWidth)
     }
     
