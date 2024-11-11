@@ -15,6 +15,7 @@ public struct SwipeCellModifier: ViewModifier {
     let generator = UINotificationFeedbackGenerator()
     @State private var hapticFeedbackOccurred: Bool = false
     @State private var openSideLock: SwipeGroupSide?
+    @Environment(\.layoutDirection) var layoutDirection
 
     public func body(content: Content) -> some View {
 
@@ -115,10 +116,12 @@ public struct SwipeCellModifier: ViewModifier {
             return
         }
         
+        let layoutDirectionMultiplier: CGFloat = layoutDirection == .leftToRight ? 1 : -1
+        
         if self.openSideLock != nil {
             // if one side is open, we need to add the menu width!
               let menuWidth = self.openSideLock == .leading ? self.menuWidth(side: .leading) : self.menuWidth(side: .trailing)
-              self.offsetX = menuWidth * openSideLock!.sideFactor + horizontalTranslation
+              self.offsetX = menuWidth * openSideLock!.sideFactor + horizontalTranslation * layoutDirectionMultiplier
             self.triggerHapticFeedbackIfNeeded(horizontalTranslation: horizontalTranslation)
             return
         }
@@ -127,7 +130,7 @@ public struct SwipeCellModifier: ViewModifier {
         
         if horizontalTranslation > 8 || horizontalTranslation < -8 { // makes sure the swipe cell doesn't open too easily
             self.currentUserInteractionCellID = self.id
-            self.offsetX =  horizontalTranslation
+            self.offsetX =  horizontalTranslation * layoutDirectionMultiplier
         } else {
             self.offsetX = 0
         }
