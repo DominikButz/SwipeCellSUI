@@ -10,6 +10,8 @@ public struct SwipeCellModifier: ViewModifier {
     @Binding var currentUserInteractionCellID: String?
     var settings: SwipeCellSettings = SwipeCellSettings()
     
+    @GestureState private var isGesturePressed: Bool = false
+  
     @State private var offsetX: CGFloat = 0
     
     let generator = UINotificationFeedbackGenerator()
@@ -29,9 +31,13 @@ public struct SwipeCellModifier: ViewModifier {
                 }
                 
                 content
+                    .onChanged(of: isGesturePressed) { v in if !v { self.dragOnEnded()} }
                     .offset(x: self.offsetX)
-                    .gesture(DragGesture(minimumDistance: 30, coordinateSpace: .local).onChanged(self.dragOnChanged(value:)).onEnded(dragOnEnded(value:)))
-                    
+                    .gesture(DragGesture(minimumDistance: 30, coordinateSpace: .local).onChanged(self.dragOnChanged(value:)).onEnded { _ in self.dragOnEnded() }
+                      .updating($isGesturePressed) { value, gestureState, transaction in
+                      gestureState = true
+                     }
+                    )
             }
             .edgesIgnoringSafeArea(.horizontal)
             .clipped()
@@ -139,7 +145,7 @@ public struct SwipeCellModifier: ViewModifier {
         return self.offsetX == 0 && (self.leadingSideGroup.isEmpty && horizontalTranslation > 0 || self.trailingSideGroup.isEmpty && horizontalTranslation < 0)
     }
     
-    internal func dragOnEnded(value: DragGesture.Value) {
+    internal func dragOnEnded() {
         
        let swipeOutTriggerValue =  self.cellWidth * self.settings.swipeOutTriggerRatio
 
