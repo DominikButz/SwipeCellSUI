@@ -31,7 +31,7 @@ public struct SwipeCellModifier: ViewModifier {
                 }
                 
                 content
-                    .onChanged(of: isGesturePressed) { v in if !v { self.dragOnEnded()} }
+                    .onChange(of: isGesturePressed) { v in if !v { self.dragOnEnded()} }
                     .offset(x: self.offsetX)
                     .gesture(DragGesture(minimumDistance: 30, coordinateSpace: .local).onChanged(self.dragOnChanged(value:)).onEnded { _ in self.dragOnEnded() }
                       .updating($isGesturePressed) { value, gestureState, transaction in
