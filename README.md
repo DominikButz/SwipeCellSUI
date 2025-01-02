@@ -158,6 +158,13 @@ struct RowView: View {
 
 ## Change log
 
+#### [Version 2.1.6](https://github.com/DominikButz/SwipeCellSUI/releases/tag/2.1.6)
+Workaround for DragGesture onEnded not firing in some cases. Thanks to  Kazachmak
+for the pull request. 
+
+#### [Version 2.1.5](https://github.com/DominikButz/SwipeCellSUI/releases/tag/2.1.5)
+added support for right to left languages. Thanks to breahna-c for the pull request!
+
 #### [Version 2.1.4](https://github.com/DominikButz/SwipeCellSUI/releases/tag/2.1.4)
 - removed frame(width:cellWidth) to avoid setting an explicit total width of the content view
 - This should solve the problem of cut-off a leading view inside the content view when SwipeCellSUI is used for rows of a List view instead of a Scroll View. It might still be necessary to set the List View modifier: .listStyle(.plain) to solve this bug. 
